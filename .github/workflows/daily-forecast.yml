@@ -1,0 +1,39 @@
+name: daily forecast
+
+# Logs a frozen model's forecasts before outcomes exist, then grades them once
+# results land. Two separate jobs on purpose: a prediction and its outcome are
+# written by different runs, so the file cannot be quietly improved after the
+# fact. The commit history is the audit trail.
+
+on:
+  schedule:
+    - cron: "0 14 * * *"   # 14:00 UTC, ahead of most first pitches
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Log today's forecasts
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python -m src.live
+      - name: Grade games that have finished
+        run: python -m src.live --grade
+      - name: Write running summary
+        run: python -m src.live --summary > live_summary.json
+      - name: Commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add live_predictions.csv live_summary.json
+          git diff --staged --quiet || git commit -m "live log $(date -u +%Y-%m-%d)"
+          git push
