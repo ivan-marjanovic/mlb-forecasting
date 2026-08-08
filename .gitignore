@@ -16,3 +16,4 @@ data/*.json
 !live_predictions.csv
 !live_summary.json
 data/synthetic/
+run.log
