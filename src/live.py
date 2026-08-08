@@ -61,7 +61,7 @@ def _get(url: str, params: dict) -> dict:
 def season_results(season: int, through: dt.date) -> pd.DataFrame:
     """Completed regular season games this year, for building features."""
     payload = _get(STATS_API, {
-        "sportId": 1, "season": season, "gameType": "R",
+        "hydrate": "team", "sportId": 1, "season": season, "gameType": "R",
         "startDate": f"{season}-03-01", "endDate": through.isoformat(),
     })
     rows = []
@@ -133,7 +133,7 @@ _NAME_TO_ABBREV = {
     "Detroit Tigers": "DET", "Houston Astros": "HOU", "Kansas City Royals": "KC",
     "Los Angeles Angels": "LAA", "Los Angeles Dodgers": "LAD", "Miami Marlins": "MIA",
     "Milwaukee Brewers": "MIL", "Minnesota Twins": "MIN", "New York Mets": "NYM",
-    "New York Yankees": "NYY", "Athletics": "OAK", "Oakland Athletics": "OAK",
+    "New York Yankees": "NYY", "Athletics": "OAK", "Athletics": "OAK", "Oakland Athletics": "OAK",
     "Philadelphia Phillies": "PHI", "Pittsburgh Pirates": "PIT", "San Diego Padres": "SD",
     "Seattle Mariners": "SEA", "San Francisco Giants": "SF", "St. Louis Cardinals": "STL",
     "Tampa Bay Rays": "TB", "Texas Rangers": "TEX", "Toronto Blue Jays": "TOR",
@@ -203,6 +203,11 @@ def forecast_today(cfg=DEFAULT, api_key: str | None = None) -> pd.DataFrame:
     out["logged_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     out["home_win"] = ""
     out["graded_at"] = ""
+    print("\n--- FINAL DATA DEBUG ---")
+    print("Total matched games:", len(out))
+    print("Available columns:", out.columns.tolist())
+    print("------------------------\n")
+    out['game_date'] = out.get('date', out.get('game_date_x'))
     return out[FIELDS]
 
 
